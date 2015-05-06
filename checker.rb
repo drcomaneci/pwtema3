@@ -69,7 +69,7 @@ class Test
 			total_points += step.points
 			if ( (step.stop_on_fail & !result) || skip_the_rest)
 				skip_the_rest = true
-				puts "Testul #{index} a fost sarit datorita unui test anterior esuat\n"
+				puts "Pasul #{index} a fost sarit datorita unui test anterior esuat\n"
 			end
 		}
 		self.browser_instances.values.each{|browser|
@@ -91,8 +91,7 @@ def random_str(size)
 	o = [('a'..'z')].map { |i| i.to_a }.flatten
 	string = (0...size).map { o[$prng.rand(o.length)] }.join
 end
-$user1 = random_str($prng.rand(10))
-$user2 = random_str($prng.rand(10))
+$user1, $user2 = [ random_str($prng.rand(10)), random_str($prng.rand(10))].sort
 
 tests << Test.new("Inregistrare Utilizator", "Testul valideaza faptul ca un utilizator se poate inregistra in aplicatia web.").
 			add_step("Se acceseaza reset_db.php pentru a goli baza de date", 1, true) { |browser|
@@ -145,6 +144,72 @@ tests << Test.new("Inregistrare Utilizator", "Testul valideaza faptul ca un util
 				browser.div(:id=>"user_#{$user2}").wait_until_present(2)
 				true
 			}
+
+tests << Test.new("Creare Discutie", "Testul valideaza faptul ca se poate crea o discutie intre doi utilizatori.").
+			add_step("Se acceseaza reset_db.php pentru a goli baza de date", 1, true) { |browser|
+				browser.goto "http://localhost/reset_db.php"
+				browser.title.include?("404") ? false : true
+			}.
+			add_step("Se acceseaza pagina principala a aplicatiei", 2, true) { |browser|
+				browser.goto "http://localhost/"
+				browser.title.include?("404") ? false : true
+			}.
+			add_step("Se introduce un nume de utilizator in campul username", 2, true) { |browser|
+				browser.text_field(:id=> "username").set($user1)
+				true
+			}.
+			add_step("Se apasa tasta enter", 1, true) { |browser|
+				browser.send_keys(:enter)
+				true
+			}.
+			add_step("Se asteapta aparitia div-ului users", 1, true) { |browser|
+				browser.div(:id=>"users").wait_until_present(2)
+				true
+			}.
+			add_step("Se creaza o noua instanta de Chrome si se acceseaza aplicatia", 2, true, 1) { |browser|
+				browser.goto "http://localhost/"
+				browser.title.include?("404") ? false : true
+			}.
+			add_step("Se introduce un alt nume de utilizator in campul username", 2, true, 1) { |browser|
+				browser.text_field(:id=> "username").set($user2)
+				true
+			}.
+			add_step("Se apasa tasta enter", 1, true, 1) { |browser|
+				browser.send_keys(:enter)
+				true
+			}.
+			add_step("Se asteapta aparitia div-ului users in a doua instanta", 1, true, 1) { |browser|
+				browser.div(:id=>"users").wait_until_present(2)
+				true
+			}.
+			add_step("Se asteapta aparitia div-ului pentru primul user in a doua instanta", 1, true, 1) { |browser|
+				browser.div(:id=>"user_#{$user1}").wait_until_present(2)
+				true
+			}.
+			add_step("Se asteapta aparitia div-ului pentru al doilea user in prima instanta", 1, true) { |browser|
+				browser.div(:id=>"user_#{$user2}").wait_until_present(2)
+				true
+			}.
+			add_step("Se face click pe al doilea user pentru a initia o discutie", 3, true) { |browser|
+				browser.div(:id=>"user_#{$user2}").click
+				true
+			}.
+			add_step("Se verifica existenta div-ului chats", 1, true) { |browser|
+				browser.div(:id=>"chats").wait_until_present(2)
+				true
+			}.
+			add_step("Se verifica existenta div-ului pentru discutia specifica", 3, true) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").wait_until_present(2)
+				true
+			}
+			.add_step("Se verifica ca exista un div participants in interiorul div-ului pentru discutie si ca acela contine numele utilizatorilor", 2, true) { |browser|
+				participants = browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"participants").text
+				participants.include?($user1) && participants.include?($user2)
+			}
+			.add_step("Se verifica ca div-ul last_message sa existe in interior-ul div-ului pentru discutie si sa fie gol (nu exista inca un ultim mesaj)", 2, true) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"last_message").text == ""
+			}
+
 
 num_points = 0
 total_points = 0
