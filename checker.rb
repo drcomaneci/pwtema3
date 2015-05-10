@@ -91,7 +91,17 @@ def random_str(size)
 	o = [('a'..'z')].map { |i| i.to_a }.flatten
 	string = (0...size).map { o[$prng.rand(o.length)] }.join
 end
-$user1, $user2 = [ random_str($prng.rand(10)), random_str($prng.rand(10))].sort
+
+#create some random users & messages
+users = []
+messages = []
+2.times {
+	users << random_str($prng.rand(10) + 5)
+	messages << random_str($prng.rand(30) + 5)
+}
+$user1, $user2 = users.sort
+$msg1, $msg2 = messages
+$max_wait_time = 5
 
 tests << Test.new("Inregistrare Utilizator", "Testul valideaza faptul ca un utilizator se poate inregistra in aplicatia web.").
 			add_step("Se acceseaza reset_db.php pentru a goli baza de date", 1, true) { |browser|
@@ -114,7 +124,7 @@ tests << Test.new("Inregistrare Utilizator", "Testul valideaza faptul ca un util
 				true
 			}.
 			add_step("Se asteapta aparitia div-ului users", 1, true) { |browser|
-				browser.div(:id=>"users").wait_until_present(2)
+				browser.div(:id=>"users").wait_until_present($max_wait_time)
 				true
 			}.
 			add_step("Se verifica ca nu exista nici un utilizator in lista", 2, false) { |browser|
@@ -133,15 +143,15 @@ tests << Test.new("Inregistrare Utilizator", "Testul valideaza faptul ca un util
 				true
 			}.
 			add_step("Se asteapta aparitia div-ului users in a doua instanta", 1, true, 1) { |browser|
-				browser.div(:id=>"users").wait_until_present(2)
+				browser.div(:id=>"users").wait_until_present($max_wait_time)
 				true
 			}.
 			add_step("Se asteapta aparitia div-ului pentru primul user in a doua instanta", 1, true, 1) { |browser|
-				browser.div(:id=>"user_#{$user1}").wait_until_present(2)
+				browser.div(:id=>"user_#{$user1}").wait_until_present($max_wait_time)
 				true
 			}.
 			add_step("Se asteapta aparitia div-ului pentru al doilea user in prima instanta", 1, true) { |browser|
-				browser.div(:id=>"user_#{$user2}").wait_until_present(2)
+				browser.div(:id=>"user_#{$user2}").wait_until_present($max_wait_time)
 				true
 			}
 
@@ -163,7 +173,7 @@ tests << Test.new("Creare Discutie", "Testul valideaza faptul ca se poate crea o
 				true
 			}.
 			add_step("Se asteapta aparitia div-ului users", 1, true) { |browser|
-				browser.div(:id=>"users").wait_until_present(2)
+				browser.div(:id=>"users").wait_until_present($max_wait_time)
 				true
 			}.
 			add_step("Se creaza o noua instanta de Chrome si se acceseaza aplicatia", 2, true, 1) { |browser|
@@ -179,15 +189,15 @@ tests << Test.new("Creare Discutie", "Testul valideaza faptul ca se poate crea o
 				true
 			}.
 			add_step("Se asteapta aparitia div-ului users in a doua instanta", 1, true, 1) { |browser|
-				browser.div(:id=>"users").wait_until_present(2)
+				browser.div(:id=>"users").wait_until_present($max_wait_time)
 				true
 			}.
 			add_step("Se asteapta aparitia div-ului pentru primul user in a doua instanta", 1, true, 1) { |browser|
-				browser.div(:id=>"user_#{$user1}").wait_until_present(2)
+				browser.div(:id=>"user_#{$user1}").wait_until_present($max_wait_time)
 				true
 			}.
 			add_step("Se asteapta aparitia div-ului pentru al doilea user in prima instanta", 1, true) { |browser|
-				browser.div(:id=>"user_#{$user2}").wait_until_present(2)
+				browser.div(:id=>"user_#{$user2}").wait_until_present($max_wait_time)
 				true
 			}.
 			add_step("Se face click pe al doilea user pentru a initia o discutie", 3, true) { |browser|
@@ -195,11 +205,11 @@ tests << Test.new("Creare Discutie", "Testul valideaza faptul ca se poate crea o
 				true
 			}.
 			add_step("Se verifica existenta div-ului chats", 1, true) { |browser|
-				browser.div(:id=>"chats").wait_until_present(2)
+				browser.div(:id=>"chats").wait_until_present($max_wait_time)
 				true
 			}.
 			add_step("Se verifica existenta div-ului pentru discutia specifica", 3, true) { |browser|
-				browser.div(:id=>"chat_#{$user1}_#{$user2}").wait_until_present(2)
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
 				true
 			}
 			.add_step("Se verifica ca exista un div participants in interiorul div-ului pentru discutie si ca acela contine numele utilizatorilor", 2, true) { |browser|
@@ -208,9 +218,172 @@ tests << Test.new("Creare Discutie", "Testul valideaza faptul ca se poate crea o
 			}
 			.add_step("Se verifica ca div-ul last_message sa existe in interior-ul div-ului pentru discutie si sa fie gol (nu exista inca un ultim mesaj)", 2, true) { |browser|
 				browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"last_message").text == ""
+			}.
+			add_step("Se verifica existenta div-ului chats in a doua instanta", 1, true, 1) { |browser|
+				browser.div(:id=>"chats").wait_until_present($max_wait_time)
+				true
+			}.
+			add_step("Se verifica existenta div-ului pentru discutia specifica in a doua instanta", 3, true, 1) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				true
+			}
+			.add_step("Se verifica ca exista un div participants in interiorul div-ului pentru discutie si ca acela contine numele utilizatorilor in a doua instanta", 2, true, 1) { |browser|
+				participants = browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"participants").text
+				participants.include?($user1) && participants.include?($user2)
+			}
+			.add_step("Se verifica ca div-ul last_message sa existe in interior-ul div-ului pentru discutie si sa fie gol (nu exista inca un ultim mesaj) in a doua instanta", 2, true, 1) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"last_message").text == ""
 			}
 
-
+tests << Test.new("Discutie intre doua persoane", "Testul valideaza faptul doi utilizatori pot schimba mesaje intre ei.").
+			add_step("Se acceseaza reset_db.php pentru a goli baza de date", 1, true) { |browser|
+				browser.goto "http://localhost/reset_db.php"
+				browser.title.include?("404") ? false : true
+			}.
+			add_step("Se acceseaza pagina principala a aplicatiei", 1, true) { |browser|
+				browser.goto "http://localhost/"
+				browser.title.include?("404") ? false : true
+			}.
+			add_step("Se introduce un nume de utilizator in campul username", 1, true) { |browser|
+				browser.text_field(:id=> "username").set($user1)
+				true
+			}.
+			add_step("Se apasa tasta enter", 1, true) { |browser|
+				browser.send_keys(:enter)
+				true
+			}.
+			add_step("Se asteapta aparitia div-ului users", 1, true) { |browser|
+				browser.div(:id=>"users").wait_until_present($max_wait_time)
+				true
+			}.
+			add_step("Se creaza o noua instanta de Chrome si se acceseaza aplicatia", 1, true, 1) { |browser|
+				browser.goto "http://localhost/"
+				browser.title.include?("404") ? false : true
+			}.
+			add_step("Se introduce un alt nume de utilizator in campul username", 1, true, 1) { |browser|
+				browser.text_field(:id=> "username").set($user2)
+				true
+			}.
+			add_step("Se apasa tasta enter", 1, true, 1) { |browser|
+				browser.send_keys(:enter)
+				true
+			}.
+			add_step("Se asteapta aparitia div-ului users in a doua instanta", 1, true, 1) { |browser|
+				browser.div(:id=>"users").wait_until_present($max_wait_time)
+				true
+			}.
+			add_step("Se asteapta aparitia div-ului pentru primul user in a doua instanta", 1, true, 1) { |browser|
+				browser.div(:id=>"user_#{$user1}").wait_until_present($max_wait_time)
+				true
+			}.
+			add_step("Se asteapta aparitia div-ului pentru al doilea user in prima instanta", 1, true) { |browser|
+				browser.div(:id=>"user_#{$user2}").wait_until_present($max_wait_time)
+				true
+			}.
+			add_step("Se face click pe al doilea user pentru a initia o discutie", 1, true) { |browser|
+				browser.div(:id=>"user_#{$user2}").click
+				true
+			}.
+			add_step("Se verifica existenta div-ului chats", 1, true) { |browser|
+				browser.div(:id=>"chats").wait_until_present($max_wait_time)
+				true
+			}.
+			add_step("Se verifica existenta div-ului pentru discutia specifica", 1, true) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				true
+			}
+			.add_step("Se verifica ca div-ul last_message sa existe in interior-ul div-ului pentru discutie si sa fie gol (nu exista inca un ultim mesaj)", 2, true) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"last_message").text == ""
+			}.
+			add_step("Se verifica existenta div-ului chats in a doua instanta", 1, true, 1) { |browser|
+				browser.div(:id=>"chats").wait_until_present($max_wait_time)
+				true
+			}
+			.add_step("Se verifica existenta div-ului pentru discutia specifica in a doua instanta", 3, true, 1) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").wait_until_present($max_wait_time)				
+				true
+			}
+			.add_step("Se verifica ca div-ul last_message sa existe in interior-ul div-ului pentru discutie si sa fie gol (nu exista inca un ultim mesaj) in a doua instanta", 2, true, 1) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"last_message").text == ""
+			}
+			.add_step("Se verifica ca exista un div participants in interiorul div-ului chat_area pentru discutie si ca acela contine numele utilizatorilor in a prima instanta", 3, true) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				participants = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"participants").text
+				participants.include?($user1) && participants.include?($user2)
+			}
+			.add_step("Se verifica existenta div-ului messages in interiorul div-ului chat_area_#{$user1}_#{$user2} si ca acesta nu contine nici un mesaje", 4, true) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				messages = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"messages")
+				messages.divs.size == 0
+			}
+			.add_step("Se verifica existenta div-ului my_message in interiorul div-ului chat_area_#{$user1}_#{$user2} si ca acesta contine un input de tip text", 2, true) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				my_message = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"my_message")
+				my_message.text_field(:id=>"my_message_field").present?
+			}
+			.add_step("Se verifica existenta div-ului additional_participants in interiorul div-ului chat_area_#{$user1}_#{$user2} si ca acesta contine un buton pentru adaugat un participant la discutie", 2, true) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				additional = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"additional_participants")
+				additional.button(:id=>"add_participant").present?
+			}
+			.add_step("Se adauga un mesaj de la #{$user1} in chat_area_#{$user1}_#{$user2} si se verifica ca acesta apare in div-ul messages", 4, true) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				my_message = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"my_message")
+				message_field = my_message.text_field(:id=>"my_message_field")
+				message_field.send_keys($msg1)
+				message_field.send_keys(:enter)
+				
+				messages = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"messages")
+				msg1 = messages.div(:id=>"msg_1")
+				msg1.wait_until_present($max_wait_time)
+				msg1.div(:id=>"content").present? && msg1.div(:id=>"timestamp").present? && msg1.div(:id=>"from").present?
+			}
+			.add_step("Se verifica continutul mesajului anterior", 5, true) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				messages = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"messages")
+				msg1 = messages.div(:id=>"msg_1")
+				msg1.div(:id=>"content").text.include?($msg1) && msg1.div(:id=>"from").text.include?($user1)
+			}
+			.add_step("Se verifica aparitia mesajului si in a doua instanta", 8, true, 1) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)				
+				messages = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"messages")
+				messages.div(:id=>"msg_1").wait_until_present($max_wait_time)
+			}
+			.add_step("Se verifica continutul mesajului in a doua instanta", 8, true, 1) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				messages = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"messages")
+				msg1 = messages.div(:id=>"msg_1")
+				msg1.div(:id=>"content").text.include?($msg1) && msg1.div(:id=>"from").text.include?($user1)
+			}
+			.add_step("Se adauga un mesaj de la #{$user2} in chat_area_#{$user1}_#{$user2} si se verifica ca acesta apare in div-ul messages", 4, true, 1) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				my_message = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"my_message")
+				message_field = my_message.text_field(:id=>"my_message_field")
+				message_field.send_keys($msg2)
+				message_field.send_keys(:enter)
+				
+				messages = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"messages")
+				msg1 = messages.div(:id=>"msg_2")
+				msg1.wait_until_present($max_wait_time)
+				msg1.div(:id=>"content").present? && msg1.div(:id=>"timestamp").present? && msg1.div(:id=>"from").present?
+			}
+			.add_step("Se verifica aparitia mesajului in prima instanta", 8, true) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)				
+				messages = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"messages")
+				messages.div(:id=>"msg_2").wait_until_present($max_wait_time)
+			}
+			.add_step("Se verifica continutul mesajului in prima instanta", 8, true) { |browser|
+				browser.div(:id=>"chat_area_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				messages = browser.div(:id=>"chat_area_#{$user1}_#{$user2}").div(:id=>"messages")
+				msg1 = messages.div(:id=>"msg_2")
+				msg1.div(:id=>"content").text.include?($msg2) && msg1.div(:id=>"from").text.include?($user2)
+			}
+			.add_step("Se verifica continutul ultimului mesaj din chat_#{$user1}_#{$user2}", 12, true) { |browser|
+				browser.div(:id=>"chat_#{$user1}_#{$user2}").wait_until_present($max_wait_time)
+				last_message = browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"last_message")
+				last_message.text.include?($user2) && last_message.text.include?($msg2)
+			}
+			
 num_points = 0
 total_points = 0
 tests.each_with_index{|test, index|
