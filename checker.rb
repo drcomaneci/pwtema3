@@ -93,14 +93,14 @@ def random_str(size)
 end
 
 #create some random users & messages
-users = []
-messages = []
-2.times {
-	users << random_str($prng.rand(10) + 5)
-	messages << random_str($prng.rand(30) + 5)
+$users = []
+$messages = []
+3.times {
+	$users << random_str($prng.rand(10) + 5)
+	$messages << random_str($prng.rand(30) + 5)
 }
-$user1, $user2 = users.sort
-$msg1, $msg2 = messages
+$user1, $user2 = $users.sort
+$msg1, $msg2 = $messages
 $max_wait_time = 5
 
 tests << Test.new("Inregistrare Utilizator", "Testul valideaza faptul ca un utilizator se poate inregistra in aplicatia web.").
@@ -383,6 +383,87 @@ tests << Test.new("Discutie intre doua persoane", "Testul valideaza faptul doi u
 				last_message = browser.div(:id=>"chat_#{$user1}_#{$user2}").div(:id=>"last_message")
 				last_message.text.include?($user2) && last_message.text.include?($msg2)
 			}
+
+multi_user_discussion = Test.new("Discutie intre 3 persoane", "Testul valideaza faptul trei utilizatori pot schimba mesaje intre ei.")
+$users.size.times { |i|
+	multi_user_discussion
+		.add_step("Se acceseaza reset_db.php pentru a goli baza de date in instanta #{i}", 1, true, i) { |browser|
+			browser.goto "http://localhost/reset_db.php"
+			browser.title.include?("404") ? false : true
+		}
+		.add_step("Se acceseaza pagina principala a aplicatiei in instanta #{i}", 1, true, i) { |browser|
+			browser.goto "http://localhost/"
+			browser.title.include?("404") ? false : true
+		}
+		.add_step("Se introduce un nume de utilizator #{$users[i]} in campul username in instanta #{i}", 1, true, i) { |browser|
+			browser.text_field(:id=> "username").set($users[i])
+			true
+			}
+		.add_step("Se apasa tasta enter in instanta #{i}", 1, true, i) { |browser|
+			browser.send_keys(:enter)
+			true
+			}
+		.add_step("Se asteapta aparitia div-ului users in instanta #{i}", 1, true, i) { |browser|
+			browser.div(:id=>"users").wait_until_present($max_wait_time)
+			true
+		}
+}
+
+$users.size.times { |i|
+	multi_user_discussion
+		.add_step("Se verifica aparitia utilizatorilor corespunzatori in instanta #{i}", 1, true, i) { |browser|
+			$users.each {|user|
+				if (user != $users[i])
+					browser.div(:id=>"user_#{user}").wait_until_present($max_wait_time)
+				end
+			}
+			true
+		}
+}
+
+multi_user_discussion
+	.add_step("Se face click pe al doilea user din prima instanta pentru a initia o discutie", 1, true, 0) { |browser|
+		browser.div(:id=>"user_#{$users[1]}").click
+		true
+	}
+	.add_step("Se apasa pe butonul de add participants si se selecteaza utilizatorul al 3-lea", 5, true, 0) { |browser|
+		browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}").button(:id=>"add_pariticipant").click
+		browser.div(:id=>"user_#{$users[2]}").click
+		true
+	}
+
+$users.size.times { |i|
+	multi_user_discussion
+	.add_step("Se verifica existenta div-ului pentru discutia specifica in instanta #{i}", 3, true, i) { |browser|
+		browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}_#{$users[2]}").wait_until_present($max_wait_time)
+		true
+	}
+	.add_step("Se verifica existenta div-ului pentru discutia specifica in instanta #{i}", 3, true, i) { |browser|
+		browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}_#{$users[2]}").wait_until_present($max_wait_time)
+		true
+	}
+	.add_step("Se trimite un mesaj din instanta #{i}", 3, true, i) { |browser|
+		message_field = browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}_#{$users[2]}").input(:type => "text", :id=>"my_message_field")
+		message_field.send_keys($messages[i])
+		message_field.send_keys(:enter)
+		true
+	}
+}
+
+$users.size.times { |i|
+	multi_user_discussion
+	.add_step("Se verifica aparitia mesajelor in instanta #{i} in ordinea corespunzatoare", 5, true, i) { |browser|
+		messages_div = browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}_#{$users[2]}").div(:id=>"messages")
+		messages_div.wait_until_present($max_wait_time)
+		result = true
+		$messages.each_with_index {|msg, i|
+			result = result && (messages_div.div(:id => "msg_#{i}").text.include?($messages[i]))
+		}
+		result
+	}
+}
+
+tests << multi_user_discussion
 			
 num_points = 0
 total_points = 0
