@@ -387,12 +387,12 @@ tests << Test.new("Discutie intre doua persoane", "Testul valideaza faptul doi u
 			}
 
 multi_user_discussion = Test.new("Discutie intre 3 persoane", "Testul valideaza faptul trei utilizatori pot schimba mesaje intre ei.")
+							.add_step("Se acceseaza reset_db.php pentru a goli baza de date", 1, true) { |browser|
+								browser.goto "http://localhost/reset_db.php"
+								browser.title.include?("404") ? false : true
+							}
 $users.size.times { |i|
 	multi_user_discussion
-		.add_step("Se acceseaza reset_db.php pentru a goli baza de date in instanta #{i}", 1, true, i) { |browser|
-			browser.goto "http://localhost/reset_db.php"
-			browser.title.include?("404") ? false : true
-		}
 		.add_step("Se acceseaza pagina principala a aplicatiei in instanta #{i}", 1, true, i) { |browser|
 			browser.goto "http://localhost/"
 			browser.title.include?("404") ? false : true
