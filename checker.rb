@@ -431,7 +431,9 @@ multi_user_discussion
 		true
 	}
 	.add_step("Se apasa pe butonul de add participants si se selecteaza utilizatorul al 3-lea", 5, true, 0) { |browser|
-		browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}").input(:type=> "button", :id=>"add_participant").click
+		chat_area = browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}")
+		chat_area.wait_until_present($max_wait_time)
+		chat_area.input(:type=> "button", :id=>"add_participant").click
 		browser.div(:id=>"user_#{$users[2]}").click
 		true
 	}
