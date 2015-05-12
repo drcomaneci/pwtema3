@@ -99,6 +99,8 @@ $messages = []
 	$users << random_str($prng.rand(10) + 5)
 	$messages << random_str($prng.rand(30) + 5)
 }
+
+$users = $users.sort
 $user1, $user2 = $users.sort
 $msg1, $msg2 = $messages
 $max_wait_time = 5
@@ -423,11 +425,13 @@ $users.size.times { |i|
 
 multi_user_discussion
 	.add_step("Se face click pe al doilea user din prima instanta pentru a initia o discutie", 1, true, 0) { |browser|
-		browser.div(:id=>"user_#{$users[1]}").click
+		users = browser.div(:id=>"users")
+		users.wait_until_present($max_wait_time)
+		users.div(:id=>"user_#{$users[1]}").click
 		true
 	}
 	.add_step("Se apasa pe butonul de add participants si se selecteaza utilizatorul al 3-lea", 5, true, 0) { |browser|
-		browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}").button(:id=>"add_pariticipant").click
+		browser.div(:id=>"chat_area_#{$users[0]}_#{$users[1]}").input(:type=> "button", :id=>"add_participant").click
 		browser.div(:id=>"user_#{$users[2]}").click
 		true
 	}
@@ -457,7 +461,7 @@ $users.size.times { |i|
 		messages_div.wait_until_present($max_wait_time)
 		result = true
 		$messages.each_with_index {|msg, i|
-			result = result && (messages_div.div(:id => "msg_#{i}").text.include?($messages[i]))
+			result = result && (messages_div.div(:id => "msg_#{i + 1}").text.include?($messages[i]))
 		}
 		result
 	}
