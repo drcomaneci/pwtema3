@@ -463,6 +463,7 @@ $users.size.times { |i|
 		messages_div.wait_until_present($max_wait_time)
 		result = true
 		$messages.each_with_index {|msg, i|
+			messages_div.div(:id => "msg_#{i + 1}").wait_until_present($max_wait_time)
 			result = result && (messages_div.div(:id => "msg_#{i + 1}").text.include?($messages[i]))
 		}
 		result
